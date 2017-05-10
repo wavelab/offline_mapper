@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="laser_slam" type="laser_slam_service_tester" name="laser_slam_service_tester" output="screen" />
+	<param name="scan_file_path" value="$(find laser_slam)/test_data/scans/" type="str" />
+	<param name="pose_file_path" value="$(find laser_slam)/test_data/poses/" type="str" />
+
+  <!-- Launch the grid map visualizer -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen">
+    <rosparam command="load" file="$(find laser_slam)/config/grid_map_config.yaml" />
+  </node>
+
+</launch>

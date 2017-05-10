@@ -1,0 +1,121 @@
+/************************************************************************
+ *  
+ *  
+ *  Copyright 2015  Arun Das (University of Waterloo) 
+ *                      [adas@uwaterloo.ca]
+ *                  James Servos (University of Waterloo)
+ *                      [jdservos@uwaterloo.ca]
+ *
+ *  
+ *************************************************************************/
+#ifndef LASER_SLAM_H
+#define LASER_SLAM_H
+
+#include <ros/ros.h>
+#include <iostream>
+#include <map>
+#include <vector>
+//ros/pcl headers
+#include <geometry_msgs/PoseStamped.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <tf/tf.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <grid_map_msgs/GridMap.h>
+#include <grid_map_ros/grid_map_ros.hpp>
+//our libraries
+#include <mls/mls.h>
+//local headers
+#include <laser_slam/global_mapping_viz.h>
+#include <laser_slam/scan_registration.h>
+#include <laser_slam/csv_tools.h>
+ //service
+#include <laser_slam/InsertPointCloud.h>
+//backend
+#include <laser_slam/optimizer_base.h>
+#include <laser_slam/optimizer_impl_gtsam.h>
+
+typedef struct Edge
+{
+    int from;
+    int to;
+    geometry_msgs::PoseStamped edge; 
+	Eigen::MatrixXd edgeCov;
+	Eigen::MatrixXd edgeInf;
+	int ctype;
+
+    Edge():edgeCov(6,6) {}
+};
+
+typedef struct Node
+{
+    int idx;
+    geometry_msgs::PoseStamped pose;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr keyframe;
+
+    Node():keyframe(new pcl::PointCloud<pcl::PointXYZ>) {}
+};
+
+typedef std::vector<struct Edge> EdgeList;
+typedef std::vector<struct Node> NodeList;
+
+typedef struct PoseGraph 
+{
+    NodeList nodes;
+    EdgeList edges;
+};
+
+
+class LaserSlam{
+public:
+//constructor
+LaserSlam(int x_size, int y_size, double map_res, double vehicle_h): x_cell_size(x_size), y_cell_size(y_size), map_resolution(map_res),vehicle_height(vehicle_h) 
+ {
+ 	global_map = new MLS(x_cell_size,y_cell_size,map_resolution,false,vehicle_height);
+ 	//setup 
+    graphVizInit();
+    setup_gicp();
+    GSO->initOptimizer();
+    finished_insertion = false;
+    ROS_INFO("Laser SLAM::Waiting for first pointcloud");
+ }
+ //public functions
+ bool insertPointCloud(laser_slam::InsertPointCloud::Request  &req, laser_slam::InsertPointCloud::Response &res);
+ int run();
+
+ //accessors
+ void setNumRefinementIterations(int ref_iter ) {num_refinement_iter = ref_iter;}
+ int getNumRefinementIterations() {return num_refinement_iter;}
+
+//ROS I/O
+ros::Publisher  posegraph_pub;
+ros::Publisher  mls_pub;
+ros::ServiceServer service;
+
+private:
+
+//functions
+void regenerateGlobalMap();
+bool insertAndProcess(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud, Eigen::Affine3d input_pose);
+
+
+//variables
+
+int x_cell_size;
+int y_cell_size;
+double map_resolution;
+double vehicle_height;
+
+
+//tuning parameters
+int num_refinement_iter = 3;
+
+GraphSlamOptimizerGTSAM opt_gtsam;
+GraphSlamOptimizer * GSO = &opt_gtsam;
+PoseGraph* pose_graph;
+MLS* global_map; 
+bool finished_insertion;
+
+};
+
+#endif

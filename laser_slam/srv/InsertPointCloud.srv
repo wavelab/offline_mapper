@@ -1,0 +1,10 @@
+#   This action provides a pointcloud and a pose that should be
+#   inserted into the current master map.
+
+sensor_msgs/PointCloud2 point_cloud
+geometry_msgs/Pose point_cloud_pose
+---
+bool insertion_complete
+nav_msgs/OccupancyGrid drivability_map
+grid_map_msgs/GridMap elevation_map
+sensor_msgs/PointCloud2 full_map_cloud

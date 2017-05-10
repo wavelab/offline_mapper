@@ -1,0 +1,63 @@
+#Map parameters
+
+#size of the map in meters
+map_x_size_meter: 700
+map_y_size_meter: 700
+
+#map resolution in meters. Making this value too large will slow down the scan insertion process.
+#cells requires a sufficient number of contained points to perform reliable drivability classification.  
+map_resolution: 0.5
+
+#The number of nearest neigbour edges to connect when insering a point cloud.  Each connected edge requires a scan registration
+#to generate a pose graph measurement
+scanreg_num_vertex_knn: 10
+
+#The number of iterations used for map generation.  At each iteration, a downsample scale is 
+#computed (previous downsample scale divided by two, starting at scanreg_init_leaf_size).  
+#Each scan is downsampled according to the downsample scale, then scan registration between the scans and 
+#graph optimization is performed.  This process is repeated scanreg_num_refinement_iterations times, 
+#resulting in a coarse-to-fine multi scale optimization, which helps map convergence when the initial 
+#scan poses are inaccurate
+scanreg_num_refinement_iterations: 10
+
+#initial downsample leaf size, as described above
+scanreg_init_leaf_size: 5
+
+#set initial correspondence distance for icp, in meters (correspondences with higher distances will be ignored).
+#the correspondences distance is internally managed for the coarse-to-fine refinement (previous distance divided by two for each scale
+#starting at scanreg_init_icp_distance_max)
+scanreg_init_icp_distance_max: 30
+
+#maximum translation (meters) and rotation (rad) allowed between the scan registration solution and the supplied initialization pose.  
+#If these thresholds are exeeded, the scan registration is marked as failed, and the edge is removed from the pose graph
+scanreg_icp_trans_thresh: 10
+scanreg_icp_rot_thresh: 0.5
+
+#determines if all scan registrations are recomputed at each refinement iteration.  If set to true, at each refinement iteration, the edges of the pose
+#graph are cleared, and all the edges are recalcualted according to the iteration scale.  If set to false, the edges are preserved, and only the newly inserted
+#node and its edges are computed and refined.
+scanreg_recompute_all_edges: false
+
+
+#Drivability parameters. These are all used by the MLS library
+
+#cluster thickness threshold.  If the one sigma value of the z-component of the cluster is greater than mls_thickness_threshold,
+# it is marked as non drivable
+mls_thickness_threshold: 0.3
+
+#height diff [m] between cells.  If the distance between the means of neighbouring cells exceeds mls_height_threshold, the neighbouring
+#cells are marked as non drivable
+mls_height_threshold: 0.3 
+
+#Parameters to correspond a point to a cluster.  Let z_dist be the distance between a point's z component and cell cluster's mean z component,
+#and z_cov be the cluster's z standard deviation.  Then, if z_dist< z_cov*mls_cluster_sigma_factor+cluster_dist_threshold, the point is assigned 
+#to the cluster, and the cluster paramters are updated.
+mls_cluster_sigma_factor: 2 
+mls_cluster_dist_threshold: 0.5 
+
+#at what distance do we combine two clusters? If two clusters are within mls_cluster_combine_dist to each other,
+#the clusters are merged
+mls_cluster_combine_dist: 0.2
+
+#distance from laser sensor to the ground.  This height is used for analysis of overhanging obstancles which can be driven under
+mls_vehicle_height: 1.7
