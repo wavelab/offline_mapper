@@ -121,7 +121,6 @@ void groundSegmentation::genPolarBinGrid(
   //#pragma omp parallel
   for (int i = 0; i < nPts; i++) {
     PointXYZGD curPt;
-    ;
     double px = curPt.x = inputCloud->points[i].x;
     double py = curPt.y = inputCloud->points[i].y;
     double pz = curPt.z = inputCloud->points[i].z;
@@ -158,9 +157,6 @@ void groundSegmentation::genPolarBinGrid(
       }
     }
   }
-  /*for(int i =0; i < NUMBINSL; i++) {
-                           dCloud->push_back(pBG->aCell[50].lCell[i].prototypePoint);
-          }*/
 }
 
 MatrixXd groundSegmentation::genGPModel(vector<signalPoint> &ps1,
@@ -218,8 +214,6 @@ void groundSegmentation::sectorINSAC(int sectorIndex) {
   // values
   sort(sigPtr.begin(), sigPtr.end(), compareSignalPoints);
 
-  // for(int i=0; i< sigPtr.size(); i++)
-  // cout<< sigPtr[i].idx<< endl;
 
   // now that the z points are sorted by height, take the NUMSEEDPOINTS worth as
   // the seed

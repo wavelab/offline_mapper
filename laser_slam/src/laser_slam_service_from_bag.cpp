@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
   geometry_msgs::Pose last_pose, pose_msg;
   geometry_msgs::PoseStamped velo_pose;
 
-  bool register_next = false;
+  bool register_next = true;
   bool initialized = false;
   if (nh.getParam("/skip_scans", skip)) {
     ROS_INFO_STREAM("skipping scans to start " << skip);
@@ -138,24 +138,25 @@ int main(int argc, char **argv) {
           m.instantiate<anm_msgs::VehicleState>();
 
       if (vehicle_msg != NULL) {
-        pose_msg.position.x = vehicle_msg->position.x;
-        pose_msg.position.y = vehicle_msg->position.y;
-        pose_msg.position.z = vehicle_msg->position.z;
-        pose_msg.orientation = tf::createQuaternionMsgFromRollPitchYaw(
-            vehicle_msg->orientation.x, vehicle_msg->orientation.y,
-            vehicle_msg->orientation.z);
+        pose_msg = vehicle_msg.pose.pose;
         // ROS_INFO_STREAM(get_2d_dist(last_pose, pose_msg));
         if (!register_next && (get_2d_dist(last_pose, pose_msg) > dis_inc)) {
           register_next = true;
           last_pose = pose_msg;
         }
       } else {
-        ROS_ERROR("position message returned null pointer. Check your message "
-                  "definitions!");
+        ROS_ERROR_STREAM("Could not interpret message from topic "
+                         << m.getTopic() << " as nav_msg::Odometry.");
       }
+<<<<<<< variant A
       // ROS_INFO_STREAM("Finished with ekf message");
+>>>>>>> variant B
+======= end
     } else if (m.getTopic() == velo_topic) {
+<<<<<<< variant A
       // ROS_INFO_STREAM("Getting velo message");
+>>>>>>> variant B
+======= end
       if (register_next) {
         counter++;
         if (counter > skip) {
@@ -182,9 +183,12 @@ int main(int argc, char **argv) {
               return 1;
             }
           } else {
-            ROS_ERROR("cloud message returned null pointer");
-            ros::Duration(3).sleep();
+            ROS_ERROR("Failed to call service");
+            return 1;
           }
+        } else {
+          ROS_ERROR("Could not get PointCloud2 from message.");
+          ros::Duration(3).sleep();
         }
       }
     } else if (m.getTopic() == gps_topic) {

@@ -12,6 +12,9 @@
 #include "ground_segmentation/groundSegmentation.h"
 #include <laser_slam/laser_slam.h>
 
+// Clears the global map, integrates the points finding the transformation from
+// the point cloud's acquisition frame to some global frame, and places
+// everything into a single cloud.
 void LaserSlam::regenerateGlobalMap() {
   ROS_INFO_STREAM("Laser SLAM::Regenerating Global Map");
   // clear the global map
@@ -19,6 +22,7 @@ void LaserSlam::regenerateGlobalMap() {
 
   // integrate the points
   PoseGraph *pose_graph = GSO->getPoseGraph();
+  // Clears the global map, integrates the points.
   for (unsigned int i = 0; i < pose_graph->nodes.size(); i++) {
     // Transform keyframe into global frame
     Eigen::Affine3d trans;
@@ -63,9 +67,8 @@ bool LaserSlam::insertAndProcess(
   // Add the prior on the pose.
   GSO->addPosePrior(gN);
 
-  if (pose_graph->nodes.size() <
-      2) // can't do anything unless we have more than 1 node
-  {
+  // can't do anything unless we have more than 1 node
+  if (pose_graph->nodes.size() < 2) {
     regenerateGlobalMap();
     return true;
   }
@@ -83,7 +86,9 @@ bool LaserSlam::insertAndProcess(
       }
     }
 
-    if (this->recompute_all_edges) {
+    // Generate the pose graph to optimize.
+    if (this->recompute_all_edges) { // If we want to find new edges using
+                                     // k-nearest neighbours.
 
       // clear the edges
       pose_graph->edges.clear();
@@ -109,7 +114,7 @@ bool LaserSlam::insertAndProcess(
         }
       }
     } else {
-      // generate the edges for only the latest pose insertion.
+      // generate the edges for only the latest pose insertion instead of globally.
       // Remove the edges that are connect to the last node.
       GSO->removeLastEdges();
       Node &current_node = pose_graph->nodes.back();
@@ -178,13 +183,14 @@ bool LaserSlam::insertAndProcess(
 bool LaserSlam::insertPointCloud(laser_slam::InsertPointCloud::Request &req,
                                  laser_slam::InsertPointCloud::Response &res) {
   ROS_INFO("Laser SLAM::Processing new Point Cloud");
-  // convert to pcl pointcloud
-
+  // Convert to PCL point cloud.
   pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(
       new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(req.point_cloud, *input_cloud);
   Eigen::Affine3d input_pose;
   tf::poseMsgToEigen(req.point_cloud_pose, input_pose);
+
+  // Insert the point cloud into our global map.
   insertAndProcess(input_cloud, input_pose);
 
   // set response for drivability map

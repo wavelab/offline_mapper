@@ -37,9 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
         eigen_conversions 
         ground_segmentation 
         actionlib 
-        std_srvs
-        anm_msgs
-        dbw_mkz_msgs)
+        std_srvs)
 find_package(SUITESPARSE REQUIRED)
 
 if(OPTIMIZER STREQUAL "GTSAM")
@@ -67,8 +65,7 @@ generate_messages(
         geometry_msgs 
         sensor_msgs 
         nav_msgs 
-        grid_map_msgs 
-        anm_msgs)
+        grid_map_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -79,7 +76,8 @@ catkin_package()
 ## Build ##
 ###########
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -g")
+
 include_directories(
   include
   ${mls_INCLUDE_DIRS} 
@@ -98,6 +96,7 @@ link_directories(
 add_executable(laser_slam_service_from_bag src/laser_slam_service_from_bag.cpp)
 add_executable(laser_slam_service_tester  src/laser_slam_service_tester.cpp src/csv_tools.cpp)
 add_executable(laser_slam src/laser_slam.cpp src/global_mapping_viz.cpp src/scan_registration.cpp src/csv_tools.cpp src/main.cpp ${OPTIMIZER_SRC_FILES})
+
 
 add_dependencies( laser_slam_service_from_bag
                   ${${PROJECT_NAME}_EXPORTED_TARGETS}

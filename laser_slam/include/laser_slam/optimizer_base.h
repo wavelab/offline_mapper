@@ -24,6 +24,7 @@ public:
   virtual void optimizeGraph() = 0;
   virtual bool removeLastEdges() = 0;
 
+  // Add a new Node to the graph.
   void addNode(Node gN) {
     pose_graph.nodes.push_back(gN);
     addVertex(gN);

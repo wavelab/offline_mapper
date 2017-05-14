@@ -2,13 +2,13 @@
 <launch>
   <node pkg="laser_slam" type="laser_slam_service_from_bag" name="laser_slam_service_from_bag" output="screen"/>
 
-	<arg name="bag" />
+	<arg name="bag" default="~/loopmc1.bag"/>
 	<param name="bag_file_path" value="$(arg bag)" type="str" />
 	<param name="velodyne_topic_name" value="/velodyne_points" type="str" />
-	<param name="ekf_topic_name" value="/vehicle_state" type="str" />
+	<param name="ekf_topic_name" value="/ekf_odom" type="str" />
 	<param name="gps_topic_name" value="/novatel/gps_fix" type="str" />
 	<param name="distance_increment" value="2" type="double" />
-	<param name="skip_scans" value="150" type="int" />
+	<param name="skip_scans" value="1" type="int" />
 
   <!-- Launch the grid map visualizer -->
   <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen">
