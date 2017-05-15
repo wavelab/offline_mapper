@@ -20,10 +20,10 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/tf.h>
 
-#include <anm_msgs/VehicleState.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <grid_map_msgs/GridMap.h>
 #include <grid_map_ros/grid_map_ros.hpp>
+#include <nav_msgs/Odometry.h>
 #include <sensor_msgs/NavSatFix.h>
 
 #include <laser_slam/InsertPointCloud.h>
@@ -134,63 +134,48 @@ int main(int argc, char **argv) {
 
     if (m.getTopic() == ekf_topic) {
       // ROS_INFO_STREAM("Getting ekf message");
-      anm_msgs::VehicleState::ConstPtr vehicle_msg =
-          m.instantiate<anm_msgs::VehicleState>();
+      nav_msgs::Odometry::ConstPtr vehicle_msg =
+          m.instantiate<nav_msgs::Odometry>();
 
       if (vehicle_msg != NULL) {
-        pose_msg = vehicle_msg.pose.pose;
-        // ROS_INFO_STREAM(get_2d_dist(last_pose, pose_msg));
+        pose_msg = vehicle_msg->pose.pose;
         if (!register_next && (get_2d_dist(last_pose, pose_msg) > dis_inc)) {
           register_next = true;
+          counter = 0;
           last_pose = pose_msg;
         }
       } else {
         ROS_ERROR_STREAM("Could not interpret message from topic "
                          << m.getTopic() << " as nav_msg::Odometry.");
       }
-<<<<<<< variant A
-      // ROS_INFO_STREAM("Finished with ekf message");
->>>>>>> variant B
-======= end
-    } else if (m.getTopic() == velo_topic) {
-<<<<<<< variant A
-      // ROS_INFO_STREAM("Getting velo message");
->>>>>>> variant B
-======= end
-      if (register_next) {
-        counter++;
-        if (counter > skip) {
-          register_next = false;
-          sensor_msgs::PointCloud2::ConstPtr cloud_msg =
-              m.instantiate<sensor_msgs::PointCloud2>();
-          // call the service for insertion
-          laser_slam::InsertPointCloud srv;
-          if (cloud_msg != NULL) {
-            srv.request.point_cloud = *cloud_msg;
-            ROS_INFO_STREAM("Sending pose....");
-            ROS_INFO_STREAM(pose_msg.position.x);
-            ROS_INFO_STREAM(pose_msg.position.y);
-            ROS_INFO_STREAM(pose_msg.position.z);
-            srv.request.point_cloud_pose = pose_msg;
-            if (client.call(srv)) {
-              ROS_INFO_STREAM("Publishing Responses...");
-              elevation_pub.publish(srv.response.elevation_map);
-              map_cloud_pub.publish(srv.response.full_map_cloud);
-              drivablility_pub.publish(srv.response.drivability_map);
-              ROS_INFO_STREAM("Published Responses");
-            } else {
-              ROS_ERROR("Failed to call service");
-              return 1;
-            }
-          } else {
-            ROS_ERROR("Failed to call service");
-            return 1;
-          }
+    } else if ((m.getTopic() == velo_topic) && register_next) {
+      register_next = false;
+      sensor_msgs::PointCloud2::ConstPtr cloud_msg =
+          m.instantiate<sensor_msgs::PointCloud2>();
+      // call the service for insertion
+      laser_slam::InsertPointCloud srv;
+      if (cloud_msg != NULL) {
+        srv.request.point_cloud = *cloud_msg;
+        ROS_INFO_STREAM("Sending pose....");
+        ROS_INFO_STREAM(pose_msg.position.x);
+        ROS_INFO_STREAM(pose_msg.position.y);
+        ROS_INFO_STREAM(pose_msg.position.z);
+        srv.request.point_cloud_pose = pose_msg;
+        if (client.call(srv)) {
+          ROS_INFO_STREAM("Publishing Responses...");
+          elevation_pub.publish(srv.response.elevation_map);
+          map_cloud_pub.publish(srv.response.full_map_cloud);
+          drivablility_pub.publish(srv.response.drivability_map);
+          ROS_INFO_STREAM("Published Responses");
         } else {
-          ROS_ERROR("Could not get PointCloud2 from message.");
-          ros::Duration(3).sleep();
+          ROS_ERROR("Failed to call service");
+          return 1;
         }
+      } else {
+        ROS_ERROR("Could not get PointCloud2 from message.");
+        ros::Duration(3).sleep();
       }
+
     } else if (m.getTopic() == gps_topic) {
       sensor_msgs::NavSatFix::ConstPtr gps_msg =
           m.instantiate<sensor_msgs::NavSatFix>();
