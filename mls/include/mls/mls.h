@@ -118,7 +118,7 @@ private:
   Grid grid;
   int size_x;
   int size_y;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr global_cloud;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr global_cloud;
   pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_cloud;
   pcl::PointCloud<pcl::PointXYZ>::Ptr ground_cloud;
   nav_msgs::OccupancyGrid::Ptr drivabilityGrid;
@@ -134,14 +134,14 @@ private:
   int min_cluster_points;
 
   // Drivability parameters
-  double thickness_threshold;  // cluster thickness threshold
-  double height_threshold;     // height diff [m] between cells
-  double cluster_sigma_factor; // Gassian std dev to correspond a point to a
-                               // cluster
+  double thickness_threshold;    // cluster thickness threshold
+  double height_threshold;       // height diff [m] between cells
+  double cluster_sigma_factor;   // Gassian std dev to correspond a point to a
+                                 // cluster
   double cluster_dist_threshold; // additional delta offset from the
                                  // sigma_factor
-  double cluster_combine_dist; // at what distance do we combine two clusters?
-  double robot_height;         // distance from velodyne to ground
+  double cluster_combine_dist;   // at what distance do we combine two clusters?
+  double robot_height;           // distance from velodyne to ground
 
   // Used for partial updates and rolling map
   geometry_msgs::PoseStamped curPose;
@@ -162,7 +162,7 @@ public:
   }
   MLS(int size_x_, int size_y_, double res, bool roll, double robot_size = 1.45)
       : grid(size_x_, size_y_),
-        global_cloud(new pcl::PointCloud<pcl::PointXYZ>),
+        global_cloud(new pcl::PointCloud<pcl::PointXYZI>),
         obstacle_cloud(new pcl::PointCloud<pcl::PointXYZ>),
         ground_cloud(new pcl::PointCloud<pcl::PointXYZ>),
         drivabilityGrid(new nav_msgs::OccupancyGrid) {
@@ -225,9 +225,9 @@ public:
   }
 
   void clearMap();
-  void addToMap(pcl::PointCloud<pcl::PointXYZ>::Ptr
+  void addToMap(pcl::PointCloud<pcl::PointXYZI>::Ptr
                     input_cloud); // assumed pose already set
-  void addToMap(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud,
+  void addToMap(pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud,
                 geometry_msgs::PoseStamped pose); // sets pose first
   void addToOccupancy(
       pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud); // sets pose first
@@ -236,7 +236,7 @@ public:
 
   void updateElevationGrid();
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr getGlobalCloud() { return global_cloud; }
+  pcl::PointCloud<pcl::PointXYZI>::Ptr getGlobalCloud() { return global_cloud; }
   nav_msgs::OccupancyGrid::Ptr getDrivability() { return drivabilityGrid; }
   grid_map::GridMap getElevationGrid();
   void getSegmentedClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr &obstacle,

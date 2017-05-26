@@ -29,10 +29,10 @@ struct Edge {
 
 // Node of a graph containing a pose and a point cloud.
 struct Node {
-  int idx;                                      // The index of the node.
-  geometry_msgs::PoseStamped pose;              // The pose.
-  pcl::PointCloud<pcl::PointXYZ>::Ptr keyframe; // The point cloud.
-  Node() : keyframe(new pcl::PointCloud<pcl::PointXYZ>) {}
+  int idx;                                       // The index of the node.
+  geometry_msgs::PoseStamped pose;               // The pose.
+  pcl::PointCloud<pcl::PointXYZI>::Ptr keyframe; // The point cloud.
+  Node() : keyframe(new pcl::PointCloud<pcl::PointXYZI>) {}
   Eigen::Affine3d prior_pose; // Prior pose.
   Eigen::MatrixXd
       prior_information; // Prior information matrix. (Doesn't seem to be used.)

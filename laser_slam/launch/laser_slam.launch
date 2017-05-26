@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node pkg="laser_slam" type="laser_slam" name="laser_slam" output="screen" launch-prefix="lldb --">
+  <node pkg="laser_slam" type="laser_slam" name="laser_slam" output="screen">
     <rosparam command="load" file="$(find laser_slam)/config/laser_slam_config.yaml" />
   </node>
 

@@ -49,11 +49,11 @@ private:
   double getNearestKF(PoseGraph &pG, Node &gN);
   bool calcEdgeIcp(Edge &gE, PoseGraph &pG, double scale_div);
   Eigen::Matrix6d
-  computeEdgeInformationLUM(pcl::PointCloud<pcl::PointXYZ>::Ptr &source_trans,
-                            pcl::PointCloud<pcl::PointXYZ>::Ptr &target,
+  computeEdgeInformationLUM(pcl::PointCloud<pcl::PointXYZI>::Ptr &source_trans,
+                            pcl::PointCloud<pcl::PointXYZI>::Ptr &target,
                             double max_corr_dist);
   // variables
-  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> registration_icp;
+  pcl::IterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> registration_icp;
   double course_scale_initial_leaf_size;
   ;
   double course_scale_icp_distance_max;

@@ -26,8 +26,8 @@ void LaserSlam::regenerateGlobalMap() {
   for (unsigned int i = 0; i < pose_graph->nodes.size(); i++) {
     // Transform keyframe into global frame
     Eigen::Affine3d trans;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud(
-        new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr trans_cloud(
+        new pcl::PointCloud<pcl::PointXYZI>);
     tf::poseMsgToEigen(pose_graph->nodes[i].pose.pose, trans);
     pcl::transformPointCloud(*(pose_graph->nodes[i].keyframe), *trans_cloud,
                              trans);
@@ -36,33 +36,20 @@ void LaserSlam::regenerateGlobalMap() {
 }
 
 bool LaserSlam::insertAndProcess(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud,
+    pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud,
     Eigen::Affine3d input_pose) {
 
   std::vector<Eigen::Affine3d> refined_pose_vec;
 
   double start_time = ros::Time::now().toSec();
 
-  // Perform ground segmentation.
-  groundSegmentation gSeg;
-  pcl::PointCloud<PointXYZGD>::Ptr drv_cloud(new pcl::PointCloud<PointXYZGD>);
-  pcl::PointCloud<PointXYZGD>::Ptr ground_cloud(
-      new pcl::PointCloud<PointXYZGD>);
-  pcl::PointCloud<PointXYZGD>::Ptr obs_cloud(new pcl::PointCloud<PointXYZGD>);
-
-  gSeg.setupGroundSegmentation(input_cloud, ground_cloud, obs_cloud, drv_cloud);
-  gSeg.segmentGround();
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr gseg_output(
-      new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::copyPointCloud(*obs_cloud, *gseg_output);
   // insert the node into the graph
   Node gN;
   gN.prior_pose = input_pose;
   pose_graph = GSO->getPoseGraph();
   gN.idx = pose_graph->nodes.size();
   tf::poseEigenToMsg(input_pose, gN.pose.pose);
-  *gN.keyframe = *gseg_output;
+  *gN.keyframe = *input_cloud;
   GSO->addNode(gN);
   // Add the prior on the pose.
   GSO->addPosePrior(gN);
@@ -114,7 +101,8 @@ bool LaserSlam::insertAndProcess(
         }
       }
     } else {
-      // generate the edges for only the latest pose insertion instead of globally.
+      // generate the edges for only the latest pose insertion instead of
+      // globally.
       // Remove the edges that are connect to the last node.
       GSO->removeLastEdges();
       Node &current_node = pose_graph->nodes.back();
@@ -184,8 +172,8 @@ bool LaserSlam::insertPointCloud(laser_slam::InsertPointCloud::Request &req,
                                  laser_slam::InsertPointCloud::Response &res) {
   ROS_INFO("Laser SLAM::Processing new Point Cloud");
   // Convert to PCL point cloud.
-  pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(
-      new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud(
+      new pcl::PointCloud<pcl::PointXYZI>);
   pcl::fromROSMsg(req.point_cloud, *input_cloud);
   Eigen::Affine3d input_pose;
   tf::poseMsgToEigen(req.point_cloud_pose, input_pose);
@@ -210,7 +198,7 @@ bool LaserSlam::insertPointCloud(laser_slam::InsertPointCloud::Request &req,
   res.elevation_map = elevation_msg;
 
   // set response for full map cloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr full_map_cloud;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr full_map_cloud;
   full_map_cloud = global_map->getGlobalCloud();
   sensor_msgs::PointCloud2 cloud_msg;
   pcl::toROSMsg(*full_map_cloud, cloud_msg);

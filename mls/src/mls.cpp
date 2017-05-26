@@ -40,15 +40,15 @@ void MLS::clearMap() {
   global_cloud->clear();
 }
 
-void MLS::addToMap(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud,
+void MLS::addToMap(pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud,
                    geometry_msgs::PoseStamped pose) {
   setPose(pose);
 
   if (rolling) {
     // transform cloud to account of discritization error
     // and orientation to global frame
-    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud(
-        new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr trans_cloud(
+        new pcl::PointCloud<pcl::PointXYZI>);
     Eigen::Affine3d trans;
     geometry_msgs::PoseStamped transPose = pose;
     transPose.pose.position.x = curPose.pose.position.x - pose.pose.position.x;
@@ -57,7 +57,6 @@ void MLS::addToMap(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud,
     pcl::transformPointCloud(*input_cloud, *trans_cloud,
                              trans); // transform to global orientation
     // addToMap(trans_cloud);
-    addToOccupancy(trans_cloud);
   } else {
     addToMap(input_cloud);
   }
@@ -153,8 +152,8 @@ void MLS::addToOccupancy(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud) {
 
   if (!disable_pointcloud) {
     // we should probably filter this
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output(
-        new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr output(
+        new pcl::PointCloud<pcl::PointXYZI>);
     pcl::copyPointCloud(*drv_cloud, *output);
     *global_cloud += *output; // this could get very large!! make usre to use
                               // filterCloud method
@@ -254,7 +253,7 @@ void MLS::updateCell(int x, int y) {
       cluster->cov(2, 2) =
           max(cluster->cov(2, 2), 0.001); // limit the thinness of the ground
                                           // 3cm stdev FIXME magic number
-    } else { // new cluster was added
+    } else {                              // new cluster was added
       std::sort(cell->clusters.begin(), cell->clusters.end(), cluster_comp);
     }
   }
@@ -372,7 +371,7 @@ void MLS::updateCell(int x, int y) {
   drivabilityGrid->data[x + size_x * y] = 0;
 }
 
-void MLS::addToMap(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud) {
+void MLS::addToMap(pcl::PointCloud<pcl::PointXYZI>::Ptr input_cloud) {
   // cout << " Adding a cloud " << endl;
   // NOTE: setPose(...) must be called before this frunction!
   // For rolling map we assume cloud has global orientation and is centered at
@@ -461,8 +460,8 @@ void MLS::setPose(geometry_msgs::PoseStamped pose) {
     curPose.pose.position.y += dy * resolution;
 
     if (!disable_pointcloud) {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr temp(
-          new pcl::PointCloud<pcl::PointXYZ>);
+      pcl::PointCloud<pcl::PointXYZI>::Ptr temp(
+          new pcl::PointCloud<pcl::PointXYZI>);
 
       *temp = *global_cloud;
 
@@ -473,7 +472,7 @@ void MLS::setPose(geometry_msgs::PoseStamped pose) {
       pcl::transformPointCloud(*temp, *global_cloud,
                                diff); // data is in global_cloud
 
-      pcl::PassThrough<pcl::PointXYZ> pass;
+      pcl::PassThrough<pcl::PointXYZI> pass;
       double min_size = min(size_x, size_y);
       double crop_dist = min_size * resolution / 2;
       pass.setFilterLimits(-crop_dist, crop_dist);
@@ -523,8 +522,8 @@ void MLS::offsetMap(const geometry_msgs::PoseStamped &pose) {
   }
 
   if (!disable_pointcloud) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr temp(
-        new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr temp(
+        new pcl::PointCloud<pcl::PointXYZI>);
     *temp = *global_cloud;
 
     // transform and crop global_cloud
@@ -537,8 +536,9 @@ void MLS::offsetMap(const geometry_msgs::PoseStamped &pose) {
 
 void MLS::filterPointCloud(double xy, double z) {
   // voxel filter map
-  pcl::PointCloud<pcl::PointXYZ>::Ptr temp(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::VoxelGrid<pcl::PointXYZ> sor;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr temp(
+      new pcl::PointCloud<pcl::PointXYZI>);
+  pcl::VoxelGrid<pcl::PointXYZI> sor;
   sor.setInputCloud(global_cloud);
   sor.setLeafSize(xy, xy, z);
   sor.filter(*temp); // data is in temp*/
